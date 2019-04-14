@@ -1,37 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file   solve.py
+# @file   greedy.py
 # @author Albert Puig (albert.puig@cern.ch)
-# @date   13.04.2019
+# @date   14.04.2019
 # =============================================================================
-"""Solver."""
+"""Implementation of greedy algorithms."""
 
 from operator import itemgetter
 
-import pandas as pd
-
-
-class Knapsack:
-    def init(self, input_data):
-        with open(input_data, 'r') as f_:
-            first_line = f_.readline().rstrip('\n')
-        self.item_count, self.capacity = map(int, first_line.split())
-        self.data = pd.read_table(input_data, sep=' ',
-                                  names=['value', 'weight'],
-                                  skiprows=1)
-        return self
-
-    def solve(self):
-        raise NotImplementedError
+from knapsack import Knapsack
 
 
 class Greedy(Knapsack):
     """Greedy algorithm implementation."""
+
     def solve(self):
+        """Solve greedy knapsac in a generic way."""
         value = 0
         weight = 0
-        taken = [0]*self.item_count
+        taken = [0] * self.n_items
 
         sorted_data = self.sort_data()
 
@@ -53,7 +41,7 @@ class GreedyValue(Greedy):
 
     def sort_data(self):
         """Solve taking items by value."""
-        return self.data.sort_values(by=['value'], ascending=False)
+        return self.items.sort_values(by=['value'], ascending=False)
 
 
 class GreedySmall(Greedy):
@@ -61,7 +49,7 @@ class GreedySmall(Greedy):
 
     def sort_data(self):
         """Solve taking smallest items first."""
-        return self.data.sort_values(by=['weight'])
+        return self.items.sort_values(by=['weight'])
 
 
 class GreedyDensity(Greedy):
@@ -69,8 +57,8 @@ class GreedyDensity(Greedy):
 
     def sort_data(self):
         """Sort by value density."""
-        self.data['density'] = self.data['value']/self.data['weight']
-        return self.data.sort_values(by=['density'], ascending=False)
+        self.items['density'] = self.items['value']/self.items['weight']
+        return self.items.sort_values(by=['density'], ascending=False)
 
 
 class GreedyBest(Knapsack):
@@ -80,10 +68,9 @@ class GreedyBest(Knapsack):
              'SmallItems': GreedySmall,
              'ValueDensity': GreedyDensity}
 
-    def init(self, input_data):
+    def __init__(self, input_data):
         """Initialize all algos."""
-        self.algorithms = {name: algo().init(input_data) for name, algo in self.ALGOS.items()}
-        return self
+        self.algorithms = {name: algo(input_data) for name, algo in self.ALGOS.items()}
 
     def solve(self):
         """Run all greedy algorithms and choose the best."""
@@ -91,11 +78,6 @@ class GreedyBest(Knapsack):
         for name, res in results.items():
             print(name, res)
         return sorted(results.values(), key=itemgetter(0))[-1]
-
-
-def get_solver(input_data):
-    """Get the most appropriate solver for each input data."""
-    return GreedyBest().init(input_data)
 
 
 # EOF

@@ -1,10 +1,40 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from collections import namedtuple
-Item = namedtuple("Item", ['index', 'value', 'weight'])
+from operator import itemgetter
 
-from solve import get_solver
+from knapsack import Knapsack, KnapsackError
+
+from greedy import GreedyBest
+from dp import DynamicProgramming
+
+
+class Best(Knapsack):
+    """Test all algorithms and choose the best-performing one."""
+
+    ALGOS = {'Greedy': GreedyBest,
+             'DP': DynamicProgramming}
+
+    def __init__(self, input_data):
+        """Initialize all algos."""
+        self.algorithms = {name: algo(input_data) for name, algo in self.ALGOS.items()}
+
+    def solve(self):
+        """Run all greedy algorithms and choose the best."""
+        results = {}
+        for name, algo in self.algorithms.items():
+            try:
+                results[name] = algo.solve()
+                print(f"{name} -> {results[name]}")
+            except KnapsackError:
+                print(f"Couldn't use algo {name}")
+        return sorted(results.values(), key=itemgetter(0))[-1]
+
+
+def get_solver(input_data):
+    """Get the most appropriate solver for each input data."""
+    return Best(input_data)
+
 
 def solve_it(input_data):
     solver = get_solver(input_data)
